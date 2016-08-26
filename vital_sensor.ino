@@ -2,7 +2,8 @@
 #include <NewPing.h>
 #define trigPin 3
 #define echoPin 2
-#define led 8
+#define greenLed 8
+#define redLed 4
 
 // SPI pins for sd reader
 //#define cs 10
@@ -14,9 +15,9 @@
 
 #define speakerPin 9
 #define maxBeeps 3000
-#define DIST 250
+#define DIST 100
 // Which pin on the Arduino is connected to the NeoPixels?
-#define PIN            6
+#define STRIP_PIN            6
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS      5
@@ -30,7 +31,7 @@ int goodThreshold = 3; // number of samples to reset the badLoops
 int iterations_for_avg = 5;
 NewPing sonar(trigPin, echoPin ,300 ) ;
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, STRIP_PIN, NEO_GRB + NEO_KHZ800);
 // -----------------------------------------------
 //turn off alarm
 // -----------------------------------------------
@@ -53,6 +54,7 @@ void startAlert(){
   far = 0;  
   beepCount = 0;
   Serial.println("start aler");
+  digitalWrite(redLed,HIGH);
   while (beepCount <= maxBeeps && far < 3) {
     Serial.print("beepCount ");
     Serial.print(beepCount);
@@ -114,7 +116,8 @@ void setup() {
   Serial.println("setup - begin");
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
-  pinMode(led, OUTPUT);
+  pinMode(greenLed, OUTPUT);
+  pinMode(redLed, OUTPUT);
   pinMode(speakerPin, OUTPUT);
   pixels.begin(); // This initializes the NeoPixel library.
   unAlert();
@@ -131,19 +134,21 @@ void loop() {
   distance = get_dist();
 
   if (distance < DIST && distance > 5) {  // Turn on LED if something is between 5 and 250 cm away from sensor.
-    digitalWrite(led,HIGH);
+    digitalWrite(greenLed,HIGH);
     badLoops += 1;
-    if(badLoops >= threshold) //if badLoops reaches threshold, turn on alarm    
-    startAlert();
     goodLoops = 0;
+    if(badLoops >= threshold) { //if badLoops reaches threshold, turn on alarm    
+      startAlert();     
+    }    
   } else {
     goodLoops++;
     if (goodLoops >= goodThreshold) {
       badLoops = 0;
+      digitalWrite(greenLed,LOW);
     }
   }
 
-   Serial.print("loops: ");
+  Serial.print("loops: ");
   Serial.println(badLoops);
        
   delay(1000);
